@@ -93,11 +93,11 @@ namespace FileSendServer
         public void commandHandler()
         {
             tcpListener.Start();
-            TcpClient client = tcpListener.AcceptTcpClient();
-            NetworkStream stream = client.GetStream();
-            byte[] buffer; int bytesRead; string dataRecieved;
+            byte[] buffer; int bytesRead; string dataRecieved; TcpClient client; NetworkStream stream;
             while (true)
             {
+                 client = tcpListener.AcceptTcpClient();
+                 stream = client.GetStream();
                 buffer = new byte[client.ReceiveBufferSize];
                 bytesRead = stream.Read(buffer, 0, client.ReceiveBufferSize);
                 dataRecieved = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -112,6 +112,7 @@ namespace FileSendServer
                     {
                         this.sendString(stream, "FAIL");
                     }
+                    stream.Close();
                 }
                 else if (isAuth)
                 {
@@ -125,21 +126,26 @@ namespace FileSendServer
                             str = str + ", " + file.Name;
                         }
                         this.sendString(stream, str);
+                        stream.Close();
                     }
                     else if(dataRecieved.StartsWith("COMMAND_RECIEVE"))
                     {
                         string fileName = dataRecieved.Remove(0, "COMMAND_RECIEVE:".Length);
                         if (File.Exists(@"C:\Users\user\Documents\" + fileName.Trim()))
                         {
-                            byte[] fileBytes = File.ReadAllBytes(@"C:\Users\user\Documents\" + fileName.Trim());
-                            stream.Write(fileBytes, 0, fileBytes.Length);
-                            stream.Flush();
+                            Stream fileStream = File.OpenRead(@"C:\Users\user\Documents\" + fileName.Trim());
+                            byte[] fileBuffer = new byte[fileStream.Length];
+                            fileStream.Read(fileBuffer, 0, (int)fileStream.Length);
+                            // Open a TCP/IP Connection and send the data
+                            stream.Write(fileBuffer, 0, fileBuffer.GetLength(0));
+                            stream.Close();
                         }
                     }
                 }
                 else
                 {
                     this.sendString(stream, "UNAUTHORIZED");
+                    stream.Close();
                 }
 
             }
