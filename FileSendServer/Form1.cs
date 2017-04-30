@@ -14,6 +14,9 @@ using System.Text;
 using System.IO;
 using System.Collections;
 
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
 namespace FileSendServer
 {
     public partial class Form1 : Form
@@ -24,6 +27,10 @@ namespace FileSendServer
         private Socket handlerSocket;
         private string key = "123";
         private bool isAuth = false;
+        [DllImport("user32")]
+        public static extern void LockWorkStation();
+        [DllImport("user32")]
+        public static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
         public Form1()
         {
             InitializeComponent();
@@ -72,7 +79,7 @@ namespace FileSendServer
             {
                 // Only one process can access
                 // the same file at any given time
-                Stream fileStream = File.OpenWrite("C:\\Users\\user\\Documents\\SubmittedFsssile.txt");
+                Stream fileStream = File.OpenWrite("C:\\Users\\Khaled\\Documents\\SubmittedFsssile.txt");
                 while (true)
                 {
                     thisRead = networkStream.Read(dataByte, 0, blockSize);
@@ -118,7 +125,7 @@ namespace FileSendServer
                 {
                     if (dataRecieved.StartsWith("COMMAND_LIST"))
                     {
-                        DirectoryInfo d = new DirectoryInfo(@"C:\Users\user\Documents");//Assuming Test is your Folder
+                        DirectoryInfo d = new DirectoryInfo(@"C:\Users\Khaled\Documents");//Assuming Test is your Folder
                         FileInfo[] Files = d.GetFiles(); //Getting Text files
                         string str = "";
                         foreach (FileInfo file in Files)
@@ -133,13 +140,21 @@ namespace FileSendServer
                         string fileName = dataRecieved.Remove(0, "COMMAND_RECIEVE:".Length);
                         if (File.Exists(@"C:\Users\user\Documents\" + fileName.Trim()))
                         {
-                            Stream fileStream = File.OpenRead(@"C:\Users\user\Documents\" + fileName.Trim());
+                            Stream fileStream = File.OpenRead(@"C:\Users\Khaled\Documents\" + fileName.Trim());
                             byte[] fileBuffer = new byte[fileStream.Length];
                             fileStream.Read(fileBuffer, 0, (int)fileStream.Length);
                             // Open a TCP/IP Connection and send the data
                             stream.Write(fileBuffer, 0, fileBuffer.GetLength(0));
                             stream.Close();
                         }
+                    }
+                    else if(dataRecieved.StartsWith("SHUT_DOWN"))
+                    {
+                        Process.Start("shutdown", "/s /t 10");
+                    }
+                    else if (dataRecieved.StartsWith("LOG_OFF"))
+                    {
+                        ExitWindowsEx(0, 0);
                     }
                 }
                 else
