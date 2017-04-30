@@ -89,6 +89,7 @@ namespace FileSendServer
                 fileStream.Close();
             }
             listBox1.Items.Add("File Written");
+            File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "FILE_RECEIVED " + DateTime.Now + Environment.NewLine);
             //handlerSocket = null;
         }
         public void sendString(NetworkStream ns, string str)
@@ -115,9 +116,11 @@ namespace FileSendServer
                     if (sentKey == key) {
                         isAuth = true;
                         this.sendString(stream, "SUCCESS");
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "COMMAND_AUTH - SUCCESS " + DateTime.Now + Environment.NewLine);
                     } else
                     {
                         this.sendString(stream, "FAIL");
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "COMMAND_AUTH - FAIL " + DateTime.Now + Environment.NewLine);
                     }
                     stream.Close();
                 }
@@ -134,11 +137,12 @@ namespace FileSendServer
                         }
                         this.sendString(stream, str);
                         stream.Close();
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "COMMAND_LIST " + DateTime.Now + Environment.NewLine);
                     }
                     else if(dataRecieved.StartsWith("COMMAND_RECIEVE"))
                     {
                         string fileName = dataRecieved.Remove(0, "COMMAND_RECIEVE:".Length);
-                        if (File.Exists(@"C:\Users\user\Documents\" + fileName.Trim()))
+                        if (File.Exists(@"C:\Users\Khaled\Documents\" + fileName.Trim()))
                         {
                             Stream fileStream = File.OpenRead(@"C:\Users\Khaled\Documents\" + fileName.Trim());
                             byte[] fileBuffer = new byte[fileStream.Length];
@@ -147,14 +151,22 @@ namespace FileSendServer
                             stream.Write(fileBuffer, 0, fileBuffer.GetLength(0));
                             stream.Close();
                         }
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "COMMAND_RECEIVE " + DateTime.Now + Environment.NewLine);
                     }
                     else if(dataRecieved.StartsWith("SHUT_DOWN"))
                     {
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "SHUT_DOWN " + DateTime.Now + Environment.NewLine);
                         Process.Start("shutdown", "/s /t 10");
                     }
                     else if (dataRecieved.StartsWith("LOG_OFF"))
                     {
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "LOG_OFF " + DateTime.Now + Environment.NewLine);
                         ExitWindowsEx(0, 0);
+                    }
+                    else if (dataRecieved.StartsWith("RESTART"))
+                    {
+                        File.AppendAllText("C:\\Users\\Khaled\\Documents\\Visual Studio 2015\\Projects\\FileSendServer\\FileSendServer\\Log.txt", "RESTART " + DateTime.Now + Environment.NewLine);
+                        Process.Start("shutdown", "/r /t 10");
                     }
                 }
                 else
