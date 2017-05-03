@@ -23,6 +23,8 @@ namespace FileSendServer
         [DllImport("kernel32.dll")]
         private extern static void GetSystemTime(ref SYSTEMTIME lpSystemTime);
         private ArrayList nSockets;
+        Thread thdHandler;
+        Thread t;
         private TcpListener tcpListener;
         private Socket handlerSocket;
         private string key = "123";
@@ -54,7 +56,7 @@ namespace FileSendServer
             IPHostEntry IPHost = Dns.GetHostByName(Dns.GetHostName());
             label1.Text = "My IP address is " + IPHost.AddressList[0].ToString();
             tcpListener = new TcpListener(8080);
-            Thread t = new Thread(new ThreadStart(commandHandler));
+            t = new Thread(new ThreadStart(commandHandler));
             t.Start();
         }
 
@@ -75,7 +77,7 @@ namespace FileSendServer
                         nSockets.Add(handlerSocket);
                     }
                     ThreadStart thdstHandler = new ThreadStart(handlerThread);
-                    Thread thdHandler = new Thread(thdstHandler);
+                    thdHandler = new Thread(thdstHandler);
                     thdHandler.Start();
                 }
             }
@@ -239,6 +241,25 @@ namespace FileSendServer
             }
         }
 
-      
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (e.CloseReason == CloseReason.WindowsShutDown) return;
+
+            // Confirm user wants to close
+            switch (MessageBox.Show(this, "Are you sure you want to close?", "Closing", MessageBoxButtons.YesNo))
+            {
+                case DialogResult.No:
+                    e.Cancel = true;
+                    break;
+                default:
+                    Application.ExitThread();
+
+                    Environment.Exit(0);
+                    break;
+            }
+        }
+
     }
 }
