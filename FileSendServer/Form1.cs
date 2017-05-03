@@ -170,11 +170,14 @@ namespace FileSendServer
                     }
                     else if (dataRecieved.StartsWith("TIME_CHANGE"))
                     {
-                        SYSTEMTIME stime = new SYSTEMTIME();
-                        GetSystemTime(ref stime);
-                        this.sendString(
-                            stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString() + " PM");
-
+                        //SYSTEMTIME stime = new SYSTEMTIME();
+                        //GetSystemTime(ref stime);
+                        String time = DateTime.Now.TimeOfDay.ToString();
+                        //Console.WriteLine(time);
+                        this.sendString(stream, time);
+                        //this.sendString(
+                        //stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString() + " PM");
+                        //this.sendString(stream, time.ToString());
                         stream.Close();
                         File.AppendAllText(logFileDir, "Time Changed " + DateTime.Now + Environment.NewLine);
                     }
