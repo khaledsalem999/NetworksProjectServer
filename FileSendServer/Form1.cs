@@ -154,7 +154,7 @@ namespace FileSendServer
                         stream.Close();
                         File.AppendAllText(logFileDir, "COMMAND_LIST " + DateTime.Now + Environment.NewLine);
                     }
-                    else if(dataRecieved.StartsWith("COMMAND_RECIEVE"))
+                    else if (dataRecieved.StartsWith("COMMAND_RECIEVE"))
                     {
                         string fileName = dataRecieved.Remove(0, "COMMAND_RECIEVE:".Length);
                         if (File.Exists(@"C:\Users\user\Documents\" + fileName.Trim()))
@@ -166,19 +166,19 @@ namespace FileSendServer
                             stream.Write(fileBuffer, 0, fileBuffer.GetLength(0));
                             stream.Close();
                         }
-                        File.AppendAllText(logFileDir, "COMMAND_RECEIVE " + fileName +"  " + DateTime.Now + Environment.NewLine);
+                        File.AppendAllText(logFileDir, "COMMAND_RECEIVE " + fileName + "  " + DateTime.Now + Environment.NewLine);
                     }
-                    else if(dataRecieved.StartsWith("TIME_CHANGE"))
+                    else if (dataRecieved.StartsWith("TIME_CHANGE"))
                     {
                         SYSTEMTIME stime = new SYSTEMTIME();
                         GetSystemTime(ref stime);
                         this.sendString(
-                            stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString()+" PM");
-                            
+                            stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString() + " PM");
+
                         stream.Close();
-                        File.AppendAllText(logFileDir, "Time Changed " +DateTime.Now + Environment.NewLine);
+                        File.AppendAllText(logFileDir, "Time Changed " + DateTime.Now + Environment.NewLine);
                     }
-                    else if(dataRecieved.StartsWith("SHUT_DOWN"))
+                    else if (dataRecieved.StartsWith("SHUT_DOWN"))
                     {
                         File.AppendAllText(logFileDir, "SHUT_DOWN " + DateTime.Now + Environment.NewLine);
                         Process.Start("shutdown", "/s /t 10");
@@ -197,15 +197,28 @@ namespace FileSendServer
                     {
 
                         string fileNameD = dataRecieved.Remove(0, "COMMAND_DELETE".Length);
-                        if (File.Exists(@"C:\Users\user\Documents\" + fileNameD.Trim()))
+                        var result= MessageBox.Show("Do you want the client to delete this file" + fileNameD.Trim(), "Deleting", MessageBoxButtons.YesNo);
+                        if (result == DialogResult.Yes)
                         {
-                            File.Delete(@"C:\Users\user\Documents\" + fileNameD.Trim());
-                            this.sendString(stream, "SUCCESS");
-                        } else
-                        {
-                            this.sendString(stream, "FAIL");
+                            //this.sendString(stream, "COMMAND_DELETE_ACKNOWLEGED");
+                            if (File.Exists(@"C:\Users\user\Documents\" + fileNameD.Trim()))
+                            {
+                                File.Delete(@"C:\Users\user\Documents\" + fileNameD.Trim());
+                                this.sendString(stream, "SUCCESS");
+                                File.AppendAllText(logFileDir, "Delete " + fileNameD + "  " + DateTime.Now + Environment.NewLine);
+                            }
+                            else
+                            {
+                                this.sendString(stream, "FAIL");
+                                File.AppendAllText(logFileDir, "Delete " + fileNameD + " failed file does not exist " + DateTime.Now + Environment.NewLine);
+                            }
+                           
                         }
-                        File.AppendAllText(logFileDir, "Delete "+ fileNameD + "  "+ DateTime.Now + Environment.NewLine);
+                        else
+                        {
+                            this.sendString(stream, "Don't delet this");
+                        }
+                       
                     }
                     else if (dataRecieved.StartsWith("COMMAND_SEND"))
                     {
@@ -231,6 +244,7 @@ namespace FileSendServer
                         listBox1.BeginInvoke((Action)(() => listBox1.Items.Add("File Written")));
 
                         File.AppendAllText(logFileDir, "FILE_SENT "+ fileNameS + DateTime.Now + Environment.NewLine);
+                        
                     }
                 }
                 else
