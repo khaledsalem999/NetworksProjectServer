@@ -13,7 +13,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.IO;
 using System.Collections;
-
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -21,7 +20,8 @@ namespace FileSendServer
 {
     public partial class Form1 : Form
     {
-
+        [DllImport("kernel32.dll")]
+        private extern static void GetSystemTime(ref SYSTEMTIME lpSystemTime);
         private ArrayList nSockets;
         private TcpListener tcpListener;
         private Socket handlerSocket;
@@ -31,7 +31,19 @@ namespace FileSendServer
         public static extern void LockWorkStation();
         [DllImport("user32")]
         public static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
-        public static String logFileDir= "C:\\Users\\user\\networks2\\Log.txt";
+        public static String logFileDir = "C:\\Users\\Khaled\\networks2\\Log.txt";
+
+        private struct SYSTEMTIME
+        {
+            public ushort wYear;
+            public ushort wMonth;
+            public ushort wDay;
+            public ushort wHour;
+            public ushort wMinute;
+            public ushort wSecond;
+            public ushort wMilliseconds;
+        }
+
         public Form1()
         {
             InitializeComponent();
@@ -80,7 +92,7 @@ namespace FileSendServer
             {
                 // Only one process can access
                 // the same file at any given time
-                Stream fileStream = File.OpenWrite("C:\\Users\\user\\Documents\\SubmittedFsssile.txt");
+                Stream fileStream = File.OpenWrite("C:\\Users\\Khaled\\Documents\\SubmittedFsssile.txt");
                 while (true)
                 {
                     thisRead = networkStream.Read(dataByte, 0, blockSize);
@@ -129,7 +141,7 @@ namespace FileSendServer
                 {
                     if (dataRecieved.StartsWith("COMMAND_LIST"))
                     {
-                        DirectoryInfo d = new DirectoryInfo(@"C:\Users\user\Documents");//Assuming Test is your Folder
+                        DirectoryInfo d = new DirectoryInfo(@"C:\Users\Khaled\Documents");//Assuming Test is your Folder
                         FileInfo[] Files = d.GetFiles(); //Getting Text files
                         string str = "";
                         foreach (FileInfo file in Files)
@@ -143,9 +155,9 @@ namespace FileSendServer
                     else if(dataRecieved.StartsWith("COMMAND_RECIEVE"))
                     {
                         string fileName = dataRecieved.Remove(0, "COMMAND_RECIEVE:".Length);
-                        if (File.Exists(@"C:\Users\user\Documents\" + fileName.Trim()))
+                        if (File.Exists(@"C:\Users\Khaled\Documents\" + fileName.Trim()))
                         {
-                            Stream fileStream = File.OpenRead(@"C:\Users\user\Documents\" + fileName.Trim());
+                            Stream fileStream = File.OpenRead(@"C:\Users\Khaled\Documents\" + fileName.Trim());
                             byte[] fileBuffer = new byte[fileStream.Length];
                             fileStream.Read(fileBuffer, 0, (int)fileStream.Length);
                             // Open a TCP/IP Connection and send the data
@@ -153,6 +165,15 @@ namespace FileSendServer
                             stream.Close();
                         }
                         File.AppendAllText(logFileDir, "COMMAND_RECEIVE " + fileName +"  " + DateTime.Now + Environment.NewLine);
+                    }
+                    else if(dataRecieved.StartsWith("TIME_CHANGE"))
+                    {
+                        SYSTEMTIME stime = new SYSTEMTIME();
+                        GetSystemTime(ref stime);
+                        this.sendString(
+                            stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString()+" PM");
+                            
+                        stream.Close();
                     }
                     else if(dataRecieved.StartsWith("SHUT_DOWN"))
                     {
@@ -173,9 +194,9 @@ namespace FileSendServer
                     {
 
                         string fileNameD = dataRecieved.Remove(0, "COMMAND_DELETE".Length);
-                        if (File.Exists(@"C:\Users\user\Documents\" + fileNameD.Trim()))
+                        if (File.Exists(@"C:\Users\Khaled\Documents\" + fileNameD.Trim()))
                         {
-                            File.Delete(@"C:\Users\user\Documents\" + fileNameD.Trim());
+                            File.Delete(@"C:\Users\Khaled\Documents\" + fileNameD.Trim());
                             this.sendString(stream, "SUCCESS");
                         } else
                         {
@@ -195,7 +216,7 @@ namespace FileSendServer
                         {
                             // Only one process can access
                             // the same file at any given time
-                            Stream fileStream1 = File.OpenWrite((@"C:\Users\user\networks2\" + fileNameS));
+                            Stream fileStream1 = File.OpenWrite((@"C:\Users\Khaled\networks2\" + fileNameS));
                             while (true)
                             {
                                 thisRead = stream.Read(dataByte, 0, blockSize);
