@@ -31,7 +31,7 @@ namespace FileSendServer
         public static extern void LockWorkStation();
         [DllImport("user32")]
         public static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
-        public static String logFileDir = "C:\\Users\\Khaled\\networks2\\Log.txt";
+        public static String logFileDir = "C:\\Users\\user\\networks2\\Log.txt";
 
         private struct SYSTEMTIME
         {
@@ -92,7 +92,7 @@ namespace FileSendServer
             {
                 // Only one process can access
                 // the same file at any given time
-                Stream fileStream = File.OpenWrite("C:\\Users\\Khaled\\Documents\\SubmittedFsssile.txt");
+                Stream fileStream = File.OpenWrite("C:\\Users\\user\\Documents\\SubmittedFsssile.txt");
                 while (true)
                 {
                     thisRead = networkStream.Read(dataByte, 0, blockSize);
@@ -174,6 +174,7 @@ namespace FileSendServer
                             stream, "/C time " + stime.wHour.ToString() + ":" + stime.wMinute.ToString() + ":" + stime.wSecond.ToString()+" PM");
                             
                         stream.Close();
+                        File.AppendAllText(logFileDir, "Date Changed "+DateTime.Now + Environment.NewLine);
                     }
                     else if(dataRecieved.StartsWith("SHUT_DOWN"))
                     {
@@ -239,6 +240,25 @@ namespace FileSendServer
             }
         }
 
-      
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (e.CloseReason == CloseReason.WindowsShutDown) return;
+
+            // Confirm user wants to close
+            switch (MessageBox.Show(this, "Are you sure you want to close?", "Closing", MessageBoxButtons.YesNo))
+            {
+                case DialogResult.No:
+                    e.Cancel = true;
+                    break;
+                default:
+                    Application.ExitThread();
+
+                    Environment.Exit(0);
+                    break;
+            }
+        }
+
     }
 }
